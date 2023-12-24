@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Booking Appointment App</title>
+</head>
+<body>
+
+  <h1>Booking Appointment App</h1>
+
+  <form id="appointmentForm">
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name" required>
+    <br>
+    <label for="date">Date:</label>
+    <input type="date" id="date" name="date" required>
+    <br>
+    <label for="time">Time:</label>
+    <input type="time" id="time" name="time" required>
+    <br>
+    <button type="button" onclick="bookAppointment()">Book Appointment</button>
+  </form>
+
+  <div id="savedAppointments">
+    <h2>Saved Appointments</h2>
+    <ul id="appointmentsList"></ul>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Make a GET request to crudcrud.com to retrieve saved appointments
+      axios.get('https://crudcrud.com/api/096f076ba8384b1190a0c4e80906ce07/appointments')
+        .then(response => {
+          // Display the saved appointments on the website
+          const appointmentsList = document.getElementById('appointmentsList');
+          response.data.forEach(appointment => {
+            const listItem = document.createElement('li');
+            listItem.innerHTML = `
+              Name: ${appointment.name}, Date: ${appointment.date}, Time: ${appointment.time}
+              <span style="cursor: pointer;" onclick="editAppointment('${appointment._id}')">&#x270E;</span>
+              <span style="cursor: pointer;" onclick="deleteAppointment('${appointment._id}')">&#x274C;</span>
+            `;
+            appointmentsList.appendChild(listItem);
+          });
+        })
+        .catch(error => {
+          console.error('Error retrieving appointments:', error);
+        });
+    });
+
+    function bookAppointment() {
+      const name = document.getElementById('name').value;
+      const date = document.getElementById('date').value;
+      const time = document.getElementById('time').value;
+
+      const appointment = {
+        name,
+        date,
+        time
+      };
+
+      axios.post('https://crudcrud.com/api/096f076ba8384b1190a0c4e80906ce07/appointments', appointment)
+        .then(response => {
+          console.log('Appointment booked successfully:', response.data);
+          // Refresh the appointments list after booking
+          location.reload();
+        })
+        .catch(error => {
+          console.error('Error booking appointment:', error);
+        });
+    }
+
+    function editAppointment(appointmentId) {
+      // Make a GET request to crudcrud.com to retrieve the appointment details
+      axios.get(`https://crudcrud.com/api/096f076ba8384b1190a0c4e80906ce07/appointments/${appointmentId}`)
+        .then(response => {
+          // Populate the main registration form with the appointment details for editing
+          document.getElementById('name').value = response.data.name;
+          document.getElementById('date').value = response.data.date;
+          document.getElementById('time').value = response.data.time;
+        })
+        .catch(error => {
+          console.error('Error retrieving appointment details for editing:', error);
+        });
+    }
+
+    function deleteAppointment(appointmentId) {
+      // Make a DELETE request to crudcrud.com to delete the appointment
+      axios.delete(`https://crudcrud.com/api/096f076ba8384b1190a0c4e80906ce07/appointments/${appointmentId}`)
+        .then(response => {
+          console.log('Appointment deleted successfully:', response.data);
+          // Remove the deleted appointment from the website
+          const deletedAppointment = document.querySelector(`[data-appointment-id="${appointmentId}"]`);
+          if (deletedAppointment) {
+            deletedAppointment.remove();
+          }
+        })
+        .catch(error => {
+          console.error('Error deleting appointment:', error);
+        });
+    }
+  </script>
+
+</body>
+</html>
